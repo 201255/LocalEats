@@ -1,0 +1,65 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatefulWidget {
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
+  AnimationController _controller;
+  String _text = "Hello World";
+  int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 200),
+    );
+
+    _controller.forward();
+
+    _controller.addListener(() {
+      if (_controller.isCompleted) {
+        setState(() {
+          _currentIndex++;
+        });
+        if (_currentIndex < _text.length) {
+          _controller.reset();
+          _controller.forward();
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(
+          title: Text('Letter Animation'),
+        ),
+        body: Center(
+          child: Container(
+            padding: EdgeInsets.all(16.0),
+            child: Text(
+              _text.substring(0, _currentIndex),
+              style: TextStyle(fontSize: 24.0),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
