@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:localeats/register.dart';
+import 'home_page.dart';
 
 class Login extends StatefulWidget {
   const Login({Key? key}) : super(key: key);
@@ -18,10 +19,30 @@ class _LoginState extends State<Login> {
         ),
       );
     }
+
+  void navigateToHomeView() {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (BuildContext context) => const Home(
+          ),
+        ),
+      );
+    }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
+                onPressed: navigateToHomeView,
+              ),
+            ),
+       Container(
         padding: const EdgeInsets.all(20.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -96,9 +117,7 @@ class _LoginState extends State<Login> {
             ),
             const SizedBox(height: 20.0),
             ElevatedButton(
-              onPressed: (){
-                
-              } ,
+              onPressed: navigateToHomeView,
               style: ButtonStyle(
                 backgroundColor:
                     MaterialStateProperty.all<Color>(const Color.fromARGB(255, 93, 93, 93)),
@@ -132,6 +151,9 @@ class _LoginState extends State<Login> {
             ),
 
 
+          ],
+        ),
+      ),
           ],
         ),
       ),

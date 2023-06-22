@@ -47,5 +47,13 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	
+	<!-- Permisos de ubicación -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Permiso para acceder a la ubicación del dispositivo mientras se usa la aplicación.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Permiso para acceder a la ubicación del dispositivo en todo momento.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Permiso para acceder a la ubicación del dispositivo en todo momento.</string>
 </dict>
 </plist>
