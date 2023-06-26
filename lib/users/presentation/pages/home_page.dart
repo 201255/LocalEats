@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'login.dart';
+import 'local_page.dart';
 
 class LocalDestacado {
   final String imagen;
@@ -115,7 +116,7 @@ class _HomeState extends State<Home> {
         }
       }
 
-      List<Location> locations = await locationFromAddress("Chiapas, Mexico");
+      List<Location> locations = await locationFromAddress("Tuxtla Gutierrez, Chiapas");
       if (locations.isNotEmpty) {
         Location location = locations.first;
         _currentPosition = Position.fromMap({
@@ -154,6 +155,14 @@ class _HomeState extends State<Home> {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (BuildContext context) => const Login(),
+      ),
+    );
+  }
+
+    void navigateToLocalView() {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (BuildContext context) => const Local(),
       ),
     );
   }
@@ -230,7 +239,6 @@ class _HomeState extends State<Home> {
             InkWell(
               onTap: () {
                 // Acción al hacer clic en el botón de cuenta
-                navigateToAccountView();
               },
               child: const Padding(
                 padding: EdgeInsets.only(left: 8.0),
@@ -259,70 +267,87 @@ class _HomeState extends State<Home> {
               ),
             ),
           ),
-          Expanded(
-            child: Container(
-              width: double.infinity,
-              height: 200,
-              child: ListView.builder(
-                padding: const EdgeInsets.only(top: 8.0, bottom: 16.0),
-                scrollDirection: Axis.horizontal,
-                itemCount: localesDestacados.length,
-                itemBuilder: (BuildContext context, int index) {
-                  LocalDestacado local = localesDestacados[index];
-                  return Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: deviceWidth * 0.8,
-                          height: 150,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            image: DecorationImage(
-                              image: AssetImage(local.imagen),
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 8.0),
-                        Container(
-                          width: deviceWidth * 0.8,
-                          padding: const EdgeInsets.all(3.0),
-                          child: Text(
-                            local.texto,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(height: 4.0),
-                        Container(
-                          width: deviceWidth * 0.8,
-                          padding: const EdgeInsets.all(0.0),
-                          child: Text(
-                            local.textoAdicional,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                              color: Colors.grey,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
+Expanded(
+  child: Container(
+    width: double.infinity,
+    height: 200,
+    child: ListView.builder(
+      padding: const EdgeInsets.only(top: 8.0, bottom: 16.0),
+      scrollDirection: Axis.horizontal,
+      itemCount: localesDestacados.length,
+      itemBuilder: (BuildContext context, int index) {
+        LocalDestacado local = localesDestacados[index];
+        return InkWell(
+          onTap: () {
+            // Acción al hacer clic en la imagen
+            // Agrega aquí el código que deseas ejecutar al hacer clic en la imagen
+            navigateToLocalView();
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: deviceWidth * 0.8,
+                  height: 150,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    image: DecorationImage(
+                      image: AssetImage(local.imagen),
+                      fit: BoxFit.cover,
                     ),
-                  );
-                },
-              ),
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () {
+                        // Acción al hacer clic en la imagen
+                        // Agrega aquí el código que deseas ejecutar al hacer clic en la imagen
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8.0),
+                Container(
+                  width: deviceWidth * 0.8,
+                  padding: const EdgeInsets.all(3.0),
+                  child: Text(
+                    local.texto,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(height: 4.0),
+                Container(
+                  width: deviceWidth * 0.8,
+                  padding: const EdgeInsets.all(0.0),
+                  child: Text(
+                    local.textoAdicional,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                      color: Colors.grey,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 20.0),
+        );
+      },
+    ),
+  ),
+),
+
+          const SizedBox(height: 2),
           const Padding(
             padding: EdgeInsets.only(top: 0.0, left: 16.0),
             child: Align(
@@ -337,6 +362,7 @@ class _HomeState extends State<Home> {
               ),
             ),
           ),
+          const SizedBox(width: 60),
           Expanded(
             child: Center(
             child: Container(

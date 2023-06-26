@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:localeats/register.dart';
+import 'package:localeats/users/presentation/pages/register.dart';
 import 'home_page.dart';
 
 class Login extends StatefulWidget {

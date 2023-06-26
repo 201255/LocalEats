@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'login.dart';
-import 'home_page.dart';
+import 'users/presentation/pages/login.dart';
+import 'users/presentation/pages/home_page.dart';
 
 // void main() {
 //   runApp(MaterialApp(
@@ -62,7 +62,7 @@ class _SplashState extends State<Splash>
     Future.delayed(Duration(seconds: 2), () {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => Home()),
+        MaterialPageRoute(builder: (context) =>const Home()),
       );
     });
   }

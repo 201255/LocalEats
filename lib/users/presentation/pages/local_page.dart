@@ -1,0 +1,367 @@
+import 'package:flutter/material.dart';
+import 'home_page.dart';
+
+class Local extends StatefulWidget {
+  const Local({Key? key}) : super(key: key);
+
+  @override
+  State<Local> createState() => _LocalState();
+}
+
+class _LocalState extends State<Local> {
+  bool isLiked = false;
+  Color likeIconColor = Colors.white; // Color cuando está desactivado
+  Color likedIconColor = Colors.red; // Color cuando está activado
+  double likeButtonScale = 1.5; // Escala inicial del botón
+  double nearMeIconScale = 0.8; // Escala del icono "near me"
+  double starIconScale = 0.8; // Escala de las estrellas
+
+  void navigateToHomeView() {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (BuildContext context) => const Home(),
+      ),
+    );
+  }
+
+  void toggleLike() {
+    setState(() {
+      isLiked = !isLiked;
+      // Actualizar el color del ícono
+      likeIconColor = isLiked ? likedIconColor : Colors.white;
+      // Actualizar la escala del botón
+      likeButtonScale = isLiked ? 1.5 : 1.5;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Stack(
+        children: [
+          Column(
+            children: [
+              Expanded(
+                child: Container(
+                  width: double.infinity,
+                  height: double.infinity,
+                  child: Image.asset('assets/local1.jpg', fit: BoxFit.cover),
+                ),
+              ),
+              Expanded(
+                flex: 2,
+                child: Align(
+                  alignment: Alignment.topCenter, // Ajusta la posición vertical del cuadro
+                  child: FractionalTranslation(
+                    translation: const Offset(0.0, -0.5), // Mueve el cuadro hacia arriba
+                    child: Container(
+                      width: 150, // Ajusta el ancho del cuadro según tus necesidades
+                      height: 35, // Ajusta el alto del cuadro según tus necesidades
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20.0),
+                        color: Colors.black,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Transform.scale(
+                            scale: nearMeIconScale,
+                            child: const Icon(
+                              Icons.near_me,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(width: 5),
+                          const Text(
+                            'Ubicación',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.normal,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          Positioned(
+            top: 50,
+            right: 15,
+            child: Transform.scale(
+              scale: likeButtonScale,
+              child: IconButton(
+                icon: Icon(
+                  isLiked ? Icons.favorite : Icons.favorite_border,
+                  color: likeIconColor,
+                ),
+                onPressed: toggleLike,
+              ),
+            ),
+          ),
+          Positioned(
+            top: 50,
+            left: 2,
+            child: IconButton(
+              icon: const Icon(
+                Icons.arrow_back_ios_new,
+                color: Colors.white,
+              ),
+              onPressed: navigateToHomeView,
+            ),
+          ),
+          Positioned(
+            top: 320, // Ajusta la posición vertical del texto principal
+            left: 20, // Ajusta la posición horizontal del texto principal
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Fonda El Panalito',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                const Text(
+                  'Mexicana ◦ Especies',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Row(
+                  children: [
+                    Transform.scale(
+                      scale: starIconScale, // Ajusta el tamaño de las estrellas aquí
+                      child:const Icon(Icons.star, color: Colors.yellow), // Estrellas
+                    ),
+                    Transform.scale(
+                      scale: starIconScale, // Ajusta el tamaño de las estrellas aquí
+                      child:const Icon(Icons.star, color: Colors.yellow),
+                    ),
+                    Transform.scale(
+                      scale: starIconScale, // Ajusta el tamaño de las estrellas aquí
+                      child:const Icon(Icons.star, color: Colors.yellow),
+                    ),
+                    Transform.scale(
+                      scale: starIconScale, // Ajusta el tamaño de las estrellas aquí
+                      child:const Icon(Icons.star_border, color: Colors.grey),
+                    ),
+                    Transform.scale(
+                      scale: starIconScale, // Ajusta el tamaño de las estrellas aquí
+                      child:const Icon(Icons.star_border, color: Colors.grey),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                const Text(
+                  'Nuestra comida es preparada de la mejor calidad y de la\n mas tradicional de Suchiapa, desde unos ricos caldos hasta\n la mejor carne desde 1970.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.normal,
+                    color: Colors.grey,
+                  ),
+                  softWrap: true,
+                ),
+                const SizedBox(height: 30),
+                const Text(
+                  'Precios y Menus',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                  softWrap: true,
+                ),
+                const SizedBox(height: 2),
+                const Text(
+                  '————————————————————————',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.normal,
+                    color: Colors.grey,
+                  ),
+                  softWrap: true,
+                ),
+                const SizedBox(height: 10),
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween, // Alinea el texto "Caldo de picadillo" a la izquierda y el texto "110" a la derecha
+                  children: [
+                    Text(
+                      ' Caldo de picadillo',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                      softWrap: true,
+                    ),
+                    Text(
+                      '                                   \$110',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                      softWrap: true,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  ' Caldo a base de las viseras de res\n e ingredientes que se consiguen solo\n en la comunidad.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.normal,
+                    color: Colors.grey,
+                  ),
+                  softWrap: true,
+                ),
+                const SizedBox(height: 2),
+                const Text(
+                  '————————————————————————',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.normal,
+                    color: Colors.grey,
+                  ),
+                  softWrap: true,
+                ),
+                const SizedBox(height: 10),
+                  const Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween, // Alinea el texto "Caldo de picadillo" a la izquierda y el texto "110" a la derecha
+                  children: [
+                    Text(
+                      ' Cochito Horneado',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                      softWrap: true,
+                    ),
+                    Text(
+                      '                                   \$90',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                      softWrap: true,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  ' Cerdo horneado con hierbas aromaticas\n aderezado con una salsa especial que lleva\n especies y chile ancho.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.normal,
+                    color: Colors.grey,
+                  ),
+                  softWrap: true,
+                ),
+                                const SizedBox(height: 2),
+                const Text(
+                  '————————————————————————',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.normal,
+                    color: Colors.grey,
+                  ),
+                  softWrap: true,
+                ),
+                const SizedBox(height: 10),
+                  const Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween, // Alinea el texto "Caldo de picadillo" a la izquierda y el texto "110" a la derecha
+                  children: [
+                    Text(
+                      ' Pepitas con tasajo',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                      softWrap: true,
+                    ),
+                    Text(
+                      '                                  \$150',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                      softWrap: true,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  ' El tasajo es carne seca y se prepara\n con arroz, achiote, semillas de calabaza,\n tomates y lechuga.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.normal,
+                    color: Colors.grey,
+                  ),
+                  softWrap: true,
+                ),
+                const SizedBox(height: 2),
+                const Text(
+                  '————————————————————————',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.normal,
+                    color: Colors.grey,
+                  ),
+                  softWrap: true,
+                ),
+              const SizedBox(height: 10),
+                  const Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween, // Alinea el texto "Caldo de picadillo" a la izquierda y el texto "110" a la derecha
+                  children: [
+                    Text(
+                      ' Chipilin con bolitas',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                      softWrap: true,
+                    ),
+                    Text(
+                      '                                   \$85',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                      softWrap: true,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  ' Chipilin y maiz, los 2 alimentos\n mas caracteristicos del estado\n en un solo plato.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.normal,
+                    color: Colors.grey,
+                  ),
+                  softWrap: true,
+                ),
+                
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
