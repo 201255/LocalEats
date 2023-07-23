@@ -1,6 +1,8 @@
+import 'package:dio/dio.dart';
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart'; 
-import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform; 
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform;
 import 'login.dart';
 
 class Register extends StatefulWidget {
@@ -11,33 +13,72 @@ class Register extends StatefulWidget {
 }
 
 class _RegisterState extends State<Register> {
+  TextEditingController _nombreUsuarioController = TextEditingController();
+  TextEditingController _telefonoController = TextEditingController();
+  TextEditingController _correoElectronicoController = TextEditingController();
+  TextEditingController _contrasenaController = TextEditingController();
   bool _acceptTerms = false;
 
-  void _return(){
+  void _regresar() {
     Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (BuildContext context) => const Login(),
-        ),
-      );
+      MaterialPageRoute(
+        builder: (BuildContext context) => const Login(),
+      ),
+    );
   }
 
-  void _returnForm() {
+  void _enviarFormulario() async {
     if (_acceptTerms) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (BuildContext context) => const Login(),
-        ),
-      );
+      String nombreUsuario = _nombreUsuarioController.text;
+      String telefono = _telefonoController.text;
+      String correoElectronico = _correoElectronicoController.text;
+      String contrasena = _contrasenaController.text;
+
+      Map<String, String> datosRegistro = {
+        "name": nombreUsuario,
+        "telefono": telefono,
+        "email": correoElectronico,
+        "pass": contrasena,
+      };
+
+      Dio dio = Dio();
+
+      try {
+        var respuesta = await dio.post(
+          'http://localhost:3000/api/login/create',
+          data: jsonEncode(datosRegistro),
+          options: Options(contentType: Headers.jsonContentType),
+        );
+
+        var datos = respuesta.data;
+        print(datos);
+
+        if (respuesta.statusCode == 200) {
+          // Registro exitoso, navegar a la página de inicio de sesión o manejar de acuerdo
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (BuildContext context) => const Login(),
+            ),
+          );
+        } else {
+          // Manejar error de registro
+          _mostrarAlertaError('Error en el registro: ${respuesta.statusCode}');
+        }
+      } catch (error) {
+        _mostrarAlertaError('Error en la solicitud: $error');
+        print('Error en la solicitud: $error');
+      }
     } else {
+      // Mostrar diálogo de términos y condiciones
       if (defaultTargetPlatform == TargetPlatform.android || kIsWeb) {
-        showDialog( 
+        showDialog(
           context: context,
           builder: (BuildContext context) {
-            return AlertDialog( 
+            return AlertDialog(
               title: const Text('Términos y Condiciones'),
               content: const Text('Debes aceptar los términos y condiciones para registrarte.'),
               actions: [
-                TextButton( 
+                TextButton(
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
@@ -48,14 +89,14 @@ class _RegisterState extends State<Register> {
           },
         );
       } else if (defaultTargetPlatform == TargetPlatform.iOS) {
-        showCupertinoDialog( 
+        showCupertinoDialog(
           context: context,
           builder: (BuildContext context) {
-            return CupertinoAlertDialog( 
+            return CupertinoAlertDialog(
               title: const Text('Términos y Condiciones'),
               content: const Text('Debes aceptar los términos y condiciones para registrarte.'),
               actions: [
-                CupertinoDialogAction( 
+                CupertinoDialogAction(
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
@@ -66,6 +107,46 @@ class _RegisterState extends State<Register> {
           },
         );
       }
+    }
+  }
+
+  void _mostrarAlertaError(String mensaje) {
+    if (defaultTargetPlatform == TargetPlatform.android || kIsWeb) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Error en el registro'),
+            content: Text(mensaje),
+            actions: <Widget>[
+              TextButton(
+                child: const Text('Cerrar'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
+    } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+      showCupertinoDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return CupertinoAlertDialog(
+            title: const Text('Error en el registro'),
+            content: Text(mensaje),
+            actions: <Widget>[
+              CupertinoDialogAction(
+                child: const Text('Cerrar'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
     }
   }
 
@@ -80,7 +161,7 @@ class _RegisterState extends State<Register> {
               padding: const EdgeInsets.all(16.0),
               child: IconButton(
                 icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
-                onPressed: _return,
+                onPressed: _regresar,
               ),
             ),
             Container(
@@ -103,11 +184,12 @@ class _RegisterState extends State<Register> {
                     ),
                   ),
                   const SizedBox(height: 20.0),
-                  const TextField(
+                  TextField(
+                    controller: _nombreUsuarioController,
                     decoration: InputDecoration(
                       labelText: 'Usuario',
                       prefixIcon: Padding(
-                        padding: EdgeInsets.all(8.0),
+                        padding: const EdgeInsets.all(8.0),
                         child: Icon(Icons.person),
                       ),
                       enabledBorder: UnderlineInputBorder(
@@ -119,11 +201,12 @@ class _RegisterState extends State<Register> {
                     ),
                   ),
                   const SizedBox(height: 20.0),
-                  const TextField(
+                  TextField(
+                    controller: _telefonoController,
                     decoration: InputDecoration(
                       labelText: 'Teléfono',
                       prefixIcon: Padding(
-                        padding: EdgeInsets.all(8.0),
+                        padding: const EdgeInsets.all(8.0),
                         child: Icon(Icons.phone),
                       ),
                       enabledBorder: UnderlineInputBorder(
@@ -135,11 +218,12 @@ class _RegisterState extends State<Register> {
                     ),
                   ),
                   const SizedBox(height: 20.0),
-                  const TextField(
+                  TextField(
+                    controller: _correoElectronicoController,
                     decoration: InputDecoration(
                       labelText: 'Correo Electrónico',
                       prefixIcon: Padding(
-                        padding: EdgeInsets.all(8.0),
+                        padding: const EdgeInsets.all(8.0),
                         child: Icon(Icons.mail),
                       ),
                       enabledBorder: UnderlineInputBorder(
@@ -151,14 +235,15 @@ class _RegisterState extends State<Register> {
                     ),
                   ),
                   const SizedBox(height: 10.0),
-                  const Align(
+                  Align(
                     alignment: Alignment.centerLeft,
                     child: TextField(
+                      controller: _contrasenaController,
                       obscureText: true,
                       decoration: InputDecoration(
                         labelText: 'Contraseña',
                         prefixIcon: Padding(
-                          padding: EdgeInsets.all(8.0),
+                          padding: const EdgeInsets.all(8.0),
                           child: Icon(Icons.lock),
                         ),
                         enabledBorder: UnderlineInputBorder(
@@ -186,7 +271,7 @@ class _RegisterState extends State<Register> {
                   ),
                   const SizedBox(height: 20.0),
                   ElevatedButton(
-                    onPressed: _returnForm,
+                    onPressed: _enviarFormulario,
                     style: ButtonStyle(
                       backgroundColor: MaterialStateProperty.all<Color>(
                         const Color.fromARGB(255, 93, 93, 93),

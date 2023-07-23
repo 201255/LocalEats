@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
+import 'dart:convert';
+import 'package:flutter/cupertino.dart'; 
+import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform; 
+
 import 'package:localeats/users/presentation/pages/register.dart';
 import 'home_page.dart';
 
@@ -8,26 +13,114 @@ class Login extends StatefulWidget {
   @override
   _LoginState createState() => _LoginState();
 }
-  
 
 class _LoginState extends State<Login> {
-  void _submitForm() {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (BuildContext context) => const Register(
-          ),
-        ),
-      );
+  String? _username;
+  String? _password;
+
+  final _formKey = GlobalKey<FormState>();
+
+  void _showErrorAlert(String message) {
+    if (defaultTargetPlatform == TargetPlatform.android || kIsWeb) { 
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title:const Text('Error de inicio de sesión'),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              child:const Text('Cerrar'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+    } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+      showCupertinoDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return CupertinoAlertDialog(
+          title: Text('Error de inicio de sesión'),
+          content: Text(message),
+          actions: <Widget>[
+            CupertinoDialogAction(
+              child: Text('Cerrar'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
     }
+  }
+
+  void _submitForm() async {
+    if (_formKey.currentState != null && _formKey.currentState!.validate()) {
+      _formKey.currentState!.save(); // Guardar los valores del formulario en las variables
+
+      if (_username == null || _password == null) {
+        print('Nombre de usuario o contraseña es nulo.');
+        print(_password);
+        return; // Sale de la función para evitar errores adicionales
+      }
+
+      String name = _username!;
+      String pass = _password!;
+
+      Map<String, String> requestBody = {
+        "name": name,
+        "pass": pass,
+      };
+
+      Dio dio = Dio();
+
+      try {
+        var response = await dio.post(
+          'http://localhost:3000/api/login/login',
+          data: jsonEncode(requestBody),
+          options: Options(contentType: Headers.jsonContentType),
+        );
+        
+        var data = response.data;
+
+        print(data);
+
+        if (response.statusCode == 200) {
+            navigateToHomeView();
+        } else if (response.statusCode == 400) {
+          _showErrorAlert('El usuario no existe.');
+        } else {
+          print('Error en la solicitud: ${response.statusCode}');
+        }
+      } catch (error) {
+        _showErrorAlert('El usuario no existe.');
+        print('Error en la solicitud: $error');
+      }
+    }
+  }
+
+  void navigateToRegisterView() {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (BuildContext context) => const Register(),
+      ),
+    );
+  }
 
   void navigateToHomeView() {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (BuildContext context) => const Home(
-          ),
-        ),
-      );
-    }
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (BuildContext context) => const Home(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -42,121 +135,146 @@ class _LoginState extends State<Login> {
                 onPressed: navigateToHomeView,
               ),
             ),
-       Container(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset(
-              'assets/logo2.png',
-              width: 200.0,
-              height: 200.0,
-            ),
-            const SizedBox(height: 20.0),
-            const Text(
-              'LocalEats',
-              style: TextStyle(
-                fontSize: 18.0,
-                fontWeight: FontWeight.w500,
-                letterSpacing: 7.0,
-              ),
-            ),
-            const SizedBox(height: 20.0),
-            const TextField(
-              decoration: InputDecoration(
-                labelText: 'Usuario',
-                prefixIcon: Padding(
-                  padding:  EdgeInsets.all(8.0),
-                  child: Icon(Icons.person),
-                ),
-                enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey),
-                ),
-                focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.blue),
-                ),
-              ),
-            ),
-            const SizedBox(height: 10.0),
-            Align(
-              alignment: Alignment.centerLeft,
+            Container(
+              padding: const EdgeInsets.all(20.0),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const TextField(
-                    obscureText: true,
-                    decoration: InputDecoration(
-                      labelText: 'Contraseña',
-                      prefixIcon: Padding(
-                        padding:  EdgeInsets.all(8.0),
-                        child: Icon(Icons.lock),
+                  Image.asset(
+                    'assets/logo2.png',
+                    width: 200.0,
+                    height: 200.0,
+                  ),
+                  const SizedBox(height: 20.0),
+                  const Text(
+                    'LocalEats',
+                    style: TextStyle(
+                      fontSize: 18.0,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 7.0,
+                    ),
+                  ),
+                  const SizedBox(height: 20.0),
+                  Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
+                        TextFormField(
+                          decoration: const InputDecoration(
+                            labelText: 'Usuario',
+                            prefixIcon: Padding(
+                              padding: EdgeInsets.all(8.0),
+                              child: Icon(Icons.person),
+                            ),
+                            enabledBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: Colors.grey),
+                            ),
+                            focusedBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: Colors.blue),
+                            ),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Por favor ingresa un usuario';
+                            }
+                            return null;
+                          },
+                          onSaved: (value) {
+                            _username = value; // Guardar el valor de entrada en _username
+                          },
+                        ),
+                        const SizedBox(height: 10.0),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              TextFormField(
+                                obscureText: true,
+                                decoration: const InputDecoration(
+                                  labelText: 'Contraseña',
+                                  prefixIcon: Padding(
+                                    padding: EdgeInsets.all(8.0),
+                                    child: Icon(Icons.lock),
+                                  ),
+                                  enabledBorder: UnderlineInputBorder(
+                                    borderSide: BorderSide(color: Colors.grey),
+                                  ),
+                                  focusedBorder: UnderlineInputBorder(
+                                    borderSide: BorderSide(color: Colors.blue),
+                                  ),
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Por favor ingresa una contraseña';
+                                  }
+                                  return null;
+                                },
+                                onSaved: (value) {
+                                  _password = value; // Guardar el valor de entrada en _password
+                                },
+                              ),
+                              const SizedBox(height: 10.0),
+                              GestureDetector(
+                                onTap: () {
+                                  // Acción al presionar el texto "Forgot Password?"
+                                },
+                                child: const Text(
+                                  'Forgot Password?',
+                                  style: TextStyle(
+                                    color: Color.fromARGB(255, 93, 93, 93),
+                                    fontSize: 13.0,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20.0),
+                  ElevatedButton(
+                    onPressed: _submitForm,
+                    style: ButtonStyle(
+                      backgroundColor: MaterialStateProperty.all<Color>(
+                        const Color.fromARGB(255, 93, 93, 93),
                       ),
-                      enabledBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(color: Colors.grey),
+                      shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                        RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30.0),
+                        ),
                       ),
-                      focusedBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(color: Colors.blue),
+                    ),
+                    child: Container(
+                      width: 200.0,
+                      padding: const EdgeInsets.symmetric(vertical: 10.0),
+                      child: const Center(
+                        child: Text(
+                          'Iniciar sesión',
+                          style: TextStyle(fontSize: 16.0),
+                        ),
                       ),
                     ),
                   ),
                   const SizedBox(height: 10.0),
                   GestureDetector(
-                    onTap: () {
-                      // Acción al presionar el texto "Forgot Password?"
-                    },
+                    onTap: navigateToRegisterView,
                     child: const Text(
-                      'Forgot Password?',
+                      'Registrarme',
                       style: TextStyle(
                         color: Color.fromARGB(255, 93, 93, 93),
-                        fontSize: 13.0,
+                        fontSize: 14.0,
                       ),
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 20.0),
-            ElevatedButton(
-              onPressed: navigateToHomeView,
-              style: ButtonStyle(
-                backgroundColor:
-                    MaterialStateProperty.all<Color>(const Color.fromARGB(255, 93, 93, 93)),
-                shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                  RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30.0),
-                  ),
-                ),
-              ),
-              child: Container(
-                width: 200.0,
-                padding: const EdgeInsets.symmetric(vertical: 10.0),
-                child: const Center(
-                  child: Text(
-                    'Iniciar sesión',
-                    style: TextStyle(fontSize: 16.0),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 10.0),
-            GestureDetector(
-              onTap: _submitForm,
-              child: const Text(
-              'Registrarme',
-              style:TextStyle(
-                color: Color.fromARGB(255, 93, 93, 93),
-                fontSize: 14.0,
-              ),
-            ),
-            ),
-
-
-          ],
-        ),
-      ),
           ],
         ),
       ),
     );
   }
 }
+
