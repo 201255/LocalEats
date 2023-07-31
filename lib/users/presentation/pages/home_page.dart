@@ -1,36 +1,56 @@
+// ignore_for_file: unused_local_variable, prefer_const_declarations, no_leading_underscores_for_local_identifiers, unused_field, prefer_final_fields
+
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'login.dart';
 import 'local_page.dart';
 import 'comentarios.dart';
+import 'profile_page.dart';
 
 class LocalDestacado {
   final String imagen;
-  final String texto;
-  final String textoAdicional;
+  final String namelocal;
+  final String genero;
 
   LocalDestacado({
     required this.imagen,
-    required this.texto,
-    required this.textoAdicional,
+    required this.namelocal,
+    required this.genero,
   });
+
+  factory LocalDestacado.fromJson(Map<String, dynamic> json) {
+    return LocalDestacado(
+      imagen: json['imagen'] != null ? json['imagen'].toString() : '',
+      namelocal: json['namelocal'] != null ? json['namelocal'].toString() : '',
+      genero: json['genero'] != null ? json['genero'].toString() : '',
+    );
+  }
 }
 
 class Locales {
   final String imagen;
-  final String texto;
-  final String textoAdicional;
-    final int rating;
-
+  final String namelocal;
+  final String genero;
+  final int rating;
 
   Locales({
     required this.imagen,
-    required this.texto,
-    required this.textoAdicional,
-        required this.rating,
-
+    required this.namelocal,
+    required this.genero,
+    required this.rating,
   });
+
+  factory Locales.fromJson(Map<String, dynamic> json) {
+    return Locales(
+      imagen: json['imagen'] != null ? json['imagen'].toString() : '',
+      namelocal: json['namelocal'] != null ? json['namelocal'].toString() : '',
+      genero: json['genero'] != null ? json['genero'].toString() : '',
+      rating: json['rating'] != null ? json['rating'] as int : 0,
+    );
+  }
 }
 
 class Home extends StatefulWidget {
@@ -41,55 +61,85 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+
+  Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+  late Future<bool> _access;
+  
   Position? _currentPosition;
   String _currentAddress = 'Cargando...';
 
-  List<LocalDestacado> localesDestacados = [
-    LocalDestacado(
-      imagen: 'assets/local1.jpg',
-      texto: 'Fonda El Panalito',
-      textoAdicional: ' Mexicana ◦ Especies',
-    ),
-    LocalDestacado(
-      imagen: 'assets/local2.jpg',
-      texto: 'Ciudad Bocado',
-      textoAdicional: ' Mexicana ◦ Callejera',
-    ),
-    LocalDestacado(
-      imagen: 'assets/locales.jpg',
-      texto: 'Las Brisas',
-      textoAdicional: ' Mexicana ◦ Callejera',
-    ),
-  ];
+  void navigateToAccountView() {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (BuildContext context) => const Login(),
+      ),
+    );
+  }
 
-  List<Locales> locales =[
-      Locales(
-      imagen: 'assets/1.jpg',
-      texto: 'La Juquilita',
-      textoAdicional: ' Mexicana ◦ Especies',
-            rating: 5,
+  void navigateToLocalView() {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (BuildContext context) => const Local(),
+      ),
+    );
+  }
 
-    ),
-    Locales(
-      imagen: 'assets/2.jpg',
-      texto: 'A la Mexicana',
-      textoAdicional: ' Mexicana ◦ Callejera',
-            rating: 5,
-
-    ),
-    Locales(
-      imagen: 'assets/3.jpg',
-      texto: 'El Chaparrito',
-      textoAdicional: ' Mexicana ◦ Callejera',
-            rating: 5,
-
-    ),
-  ];
+  List<LocalDestacado> localesDestacados = [];
+  List<Locales> locales = [];
 
   @override
   void initState() {
     super.initState();
+
+_access = _prefs.then((SharedPreferences prefs) {
+      return (prefs.getBool('userLogeado') ?? false);
+    }); 
+
     _getCurrentLocation();
+    _loadLocalesData();
+  }
+
+
+  Future<List<Locales>> fetchLocalesData(String location) async {
+
+    final url = 'http://localhost:3000/api/local/viewAll'; // Replace with the actual API URL
+    
+    final dio = Dio();
+
+    try {
+      final response = await dio.get(url);
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+
+        List<Locales> locales = List<Locales>.from(data.map((json) => Locales.fromJson(json)));
+        
+        return locales;
+      } else {
+        throw Exception('Failed to load locales');
+      }
+    } catch (e) {
+      throw Exception('Error fetching locales data: $e');
+    }
+  }
+
+  void _loadLocalesData() async {
+    try {
+      List<Locales> localesData = await fetchLocalesData("Suchiapa, Mexico");
+      setState(() {
+        localesDestacados = localesData
+            .map((local) => LocalDestacado(
+                  imagen: local.imagen,
+                  namelocal: local.namelocal,
+                  genero: local.genero,
+                ))
+            .toList();
+        locales = localesData;
+      });
+    } catch (e) {
+      // Handle error if the API call fails
+      print("Error fetching locales data: $e");
+    }
   }
 
   Future<void> _getCurrentLocation() async {
@@ -117,7 +167,7 @@ class _HomeState extends State<Home> {
         }
       }
 
-      List<Location> locations = await locationFromAddress("Chiapas, Mexico");
+      List<Location> locations = await locationFromAddress("Suchiapa, Mexico");
       if (locations.isNotEmpty) {
         Location location = locations.first;
         _currentPosition = Position.fromMap({
@@ -150,25 +200,12 @@ class _HomeState extends State<Home> {
     }
   }
 
-  void navigateToAccountView() {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (BuildContext context) => const Login(),
-      ),
-    );
-  }
-
-    void navigateToLocalView() {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (BuildContext context) => const Comentarios(),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     double deviceWidth = MediaQuery.of(context).size.width;
+
+
+    
 
     return Scaffold(
       appBar: AppBar(
@@ -188,7 +225,7 @@ class _HomeState extends State<Home> {
                 ),
               ),
               child: const CircleAvatar(
-                backgroundImage: AssetImage('assets/download5.jpg'),
+                backgroundImage: AssetImage('assets/1.jpg'),
                 radius: 16,
               ),
             ),
@@ -266,85 +303,89 @@ class _HomeState extends State<Home> {
               ),
             ),
           ),
-            Expanded(
-              child: Container(
-                width: double.infinity,
-                height: 200,
-                child: ListView.builder(
-                  padding: const EdgeInsets.only(top: 8.0, bottom: 16.0),
-                  scrollDirection: Axis.horizontal,
-                  itemCount: localesDestacados.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    LocalDestacado local = localesDestacados[index];
-                    return InkWell(
-                      onTap: () {
-                        // Acción al hacer clic en la imagen
-                        // Agrega aquí el código que deseas ejecutar al hacer clic en la imagen
-                        navigateToLocalView();
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              width: deviceWidth * 0.8,
-                              height: 150,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(12),
-                                image: DecorationImage(
-                                  image: AssetImage(local.imagen),
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                              child: Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  onTap: () {
-                                    // Acción al hacer clic en la imagen
-                                    // Agrega aquí el código que deseas ejecutar al hacer clic en la imagen
-                                  },
-                                ),
+          Expanded(
+            child: SizedBox(
+              width: double.infinity,
+              height: 200,
+              child: ListView.builder(
+                padding: const EdgeInsets.only(top: 8.0, bottom: 16.0),
+                scrollDirection: Axis.horizontal,
+                itemCount: 3,
+                itemBuilder: (BuildContext context, int index) {
+                        if (index >= localesDestacados.length) {
+                            return null; 
+                        }
+                  LocalDestacado local = localesDestacados[index];
+                  return InkWell(
+                    onTap: () {
+                      // Acción al hacer clic en la imagen
+                      // Agrega aquí el código que deseas ejecutar al hacer clic en la imagen
+                      // navigateToLocalView();
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: deviceWidth * 0.8,
+                            height: 150,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              image: DecorationImage(
+                                image: NetworkImage('http://localhost:3000/api/local/view_img?img1=' + (local.imagen)), 
+                                fit: BoxFit.cover,
                               ),
                             ),
-                            const SizedBox(height: 8.0),
-                            Container(
-                              width: deviceWidth * 0.8,
-                              padding: const EdgeInsets.all(3.0),
-                              child: Text(
-                                local.texto,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black,
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () {
+                                  // Acción al hacer clic en la imagen
+                                  // Agrega aquí el código que deseas ejecutar al hacer clic en la imagen
+                                  navigateToLocalView();
+                                },
                               ),
                             ),
-                            const SizedBox(height: 4.0),
-                            Container(
-                              width: deviceWidth * 0.8,
-                              padding: const EdgeInsets.all(0.0),
-                              child: Text(
-                                local.textoAdicional,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                  color: Colors.grey,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 8.0),
+                          Container(
+                            width: deviceWidth * 0.8,
+                            padding: const EdgeInsets.all(3.0),
+                            child: Text(
+                              local.namelocal,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
                               ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(height: 4.0),
+                          Container(
+                            width: deviceWidth * 0.8,
+                            padding: const EdgeInsets.all(0.0),
+                            child: Text(
+                              local.genero,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
-                    );
-                  },
-                ),
+                    ),
+                  );
+                },
               ),
             ),
+          ),
           const SizedBox(height: 2),
           const Padding(
             padding: EdgeInsets.only(top: 0.0, left: 16.0),
@@ -363,67 +404,68 @@ class _HomeState extends State<Home> {
           const SizedBox(width: 60),
           Expanded(
             child: Center(
-            child: Container(
-              width: deviceWidth * 30000.20,
-              height: 400,
-              child: ListView.builder(
-                padding: const EdgeInsets.only(top: 2.0, left: 25.0),
-                scrollDirection: Axis.vertical,
-                itemCount: locales.length,
-                itemBuilder: (BuildContext context, int index) {
-                  Locales local = locales[index];
-                  return Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: deviceWidth * 0.8,
-                          height: 150,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            image: DecorationImage(
-                              image: AssetImage(local.imagen),
-                              fit: BoxFit.cover,
+              child: SizedBox(
+                width: deviceWidth * 30000.20,
+                height: 400,
+                child: ListView.builder(
+                  padding: const EdgeInsets.only(top: 2.0, left: 25.0),
+                  scrollDirection: Axis.vertical,
+                  itemCount: locales.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    Locales local = locales[index];
+                    return Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: deviceWidth * 0.8,
+                            height: 150,
+                           decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              image: DecorationImage(
+                                image: NetworkImage('http://localhost:3000/api/local/view_img?img1=' + (local.imagen)),// Reemplaza esta URL con la dirección real de la imagen web
+                                fit: BoxFit.cover,
+                              ),
+//coloca tu imagen
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 8.0),
-                        Container(
-                          width: deviceWidth * 0.8,
-                          padding: const EdgeInsets.all(3.0),
-                          child: Text(
-                            local.texto,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
+                          const SizedBox(height: 8.0),
+                          Container(
+                            width: deviceWidth * 0.8,
+                            padding: const EdgeInsets.all(3.0),
+                            child: Text(
+                              local.namelocal,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                        const SizedBox(height: 4.0),
-                        Container(
-                          width: deviceWidth * 0.8,
-                          padding: const EdgeInsets.all(0.0),
-                          child: Text(
-                            local.textoAdicional,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                              color: Colors.grey,
+                          const SizedBox(height: 4.0),
+                          Container(
+                            width: deviceWidth * 0.8,
+                            padding: const EdgeInsets.all(0.0),
+                            child: Text(
+                              local.genero,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
+                        ],
+                      ),
+                    );
+                  },
+                ),
               ),
-            ),
             ),
           ),
         ],

@@ -1,3 +1,5 @@
+// ignore_for_file: unused_field, prefer_final_fields, use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'dart:convert';
@@ -5,7 +7,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform; 
 
 import 'package:localeats/users/presentation/pages/register.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'home_page.dart';
+import 'profile_page.dart';
 
 class Login extends StatefulWidget {
   const Login({Key? key}) : super(key: key);
@@ -15,10 +19,38 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
+
+  // variable de permanencia
+  Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+  //variable de acceso
+  late Future<bool> _access;
+  
   String? _username;
   String? _password;
 
   final _formKey = GlobalKey<FormState>();
+
+  // inicio de estado
+  @override
+  void initState() {
+    super.initState();
+    _access = _prefs.then((SharedPreferences prefs) {
+      return (prefs.getBool('userLogeado') ?? false);
+    });
+    _passMenu();
+  }
+
+  Future<void> _passMenu() async {
+    final SharedPreferences prefs = await _prefs;
+    final bool? userLogeado = prefs.getBool('userLogeado');
+
+    print("ir a home? => " '$userLogeado');
+
+    if (userLogeado == true) {
+      Navigator.of(context).pushReplacement(MaterialPageRoute(
+          builder: (BuildContext context) => const Profile()));
+    }
+  }
 
   void _showErrorAlert(String message) {
     if (defaultTargetPlatform == TargetPlatform.android || kIsWeb) { 
@@ -60,7 +92,23 @@ class _LoginState extends State<Login> {
     }
   }
 
+  Future<void> _persistirSesion() async {
+    final SharedPreferences prefs = await _prefs;
+    //guardar sescion
+    late bool logeado = true;
+
+    setState(() {
+      _access = prefs.setBool("userLogeado", logeado).then((bool success) {
+        return logeado;
+      });
+    });
+  }
+
+
   void _submitForm() async {
+
+    _persistirSesion();
+    // navigateToHomeView();
     if (_formKey.currentState != null && _formKey.currentState!.validate()) {
       _formKey.currentState!.save(); // Guardar los valores del formulario en las variables
 
@@ -93,6 +141,9 @@ class _LoginState extends State<Login> {
 
         if (response.statusCode == 200) {
             navigateToHomeView();
+
+            _persistirSesion();
+
         } else if (response.statusCode == 400) {
           _showErrorAlert('El usuario no existe.');
         } else {
@@ -104,6 +155,8 @@ class _LoginState extends State<Login> {
       }
     }
   }
+
+  
 
   void navigateToRegisterView() {
     Navigator.of(context).pushReplacement(
